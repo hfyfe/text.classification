@@ -1,0 +1,50 @@
+function w = optim(A,truth,C)
+
+%matrix size params
+SizeA = size(A) ;
+cl = SizeA(2) ;
+r = SizeA(1) ;
+
+lb= zeros (r, 1) ;
+
+%objective vector
+f = ones(2*cl+r,1);
+f(1:r,1) = C ;
+
+%constraint values vector
+b = zeros(2*cl+r,1);
+b(1:r,1) = -1 ;
+
+%constraint equations matrix
+constraints = zeros (2*cl+r, 2*cl+r) ;
+
+%populate area of vector weightings
+for i= 1:r
+    if (truth(i) == 1)
+        for j = 1:cl
+            %truths negative b/c solving min
+             constraints(i,r+cl+j) = - A(i,j) ; 
+        end
+    else
+        for j = 1:cl
+            constraints(i,r+cl+j) = A(i,j) ;
+        end
+    end
+end
+
+for i = 1:r
+    constraints(i,i) = -1 ;
+end
+
+for i = 1:cl   
+       constraints(r+i,r+i) = - 1 ;
+       constraints(r+i,cl+r+i) = 1 ;
+       constraints(r+cl+i,r+i) = -1 ;
+       constraints(r+cl+i,cl+r+i) = -1 ;     
+end
+
+%call lin program function, min f'*x sub to constraints*x <= b, lb < x
+x = linprog(f',constraints,b,[],[],lb)  ;
+
+w = x ;
+
